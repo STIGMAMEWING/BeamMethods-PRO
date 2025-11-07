@@ -1,0 +1,1834 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Advanced Beaming Methods</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Base styles and variables */
+        :root {
+            --primary: #8a2be2;
+            --secondary: #4b0082;
+            --accent: #9370db;
+            --dark: #0a0a0a;
+            --darker: #050505;
+            --light: #e6e6fa;
+            --neon: #00ffff;
+            --neon-pink: #ff00ff;
+            --shadow: 0 0 15px rgba(138, 43, 226, 0.5);
+            --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background: var(--darker);
+            color: var(--light);
+            overflow-x: hidden;
+            line-height: 1.6;
+            min-height: 100vh;
+            position: relative;
+        }
+
+        /* Galaxy Background Animation */
+        .galaxy-bg {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+            overflow: hidden;
+            background: linear-gradient(125deg, #0a0a2a 0%, #1a0033 30%, #000033 70%, #0a001a 100%);
+        }
+
+        .star {
+            position: absolute;
+            background-color: white;
+            border-radius: 50%;
+            animation: twinkle 5s infinite ease-in-out;
+        }
+
+        .star.small {
+            width: 1px;
+            height: 1px;
+        }
+
+        .star.medium {
+            width: 2px;
+            height: 2px;
+        }
+
+        .star.large {
+            width: 3px;
+            height: 3px;
+        }
+
+        .nebula {
+            position: absolute;
+            border-radius: 50%;
+            filter: blur(60px);
+            opacity: 0.3;
+            animation: float 30s infinite ease-in-out;
+        }
+
+        .nebula.purple {
+            background: radial-gradient(circle, #8a2be2 0%, transparent 70%);
+            width: 500px;
+            height: 500px;
+            top: 10%;
+            left: 5%;
+            animation-delay: 0s;
+        }
+
+        .nebula.blue {
+            background: radial-gradient(circle, #00ffff 0%, transparent 70%);
+            width: 600px;
+            height: 600px;
+            top: 60%;
+            left: 80%;
+            animation-delay: 10s;
+        }
+
+        .nebula.pink {
+            background: radial-gradient(circle, #ff00ff 0%, transparent 70%);
+            width: 400px;
+            height: 400px;
+            top: 80%;
+            left: 20%;
+            animation-delay: 20s;
+        }
+
+        .shooting-star {
+            position: absolute;
+            width: 2px;
+            height: 2px;
+            background: white;
+            border-radius: 50%;
+            box-shadow: 0 0 10px 2px white;
+            animation: shoot 8s infinite linear;
+        }
+
+        /* Page container */
+        .page-container {
+            display: none;
+            min-height: 100vh;
+            padding-top: 80px;
+        }
+
+        .page-container.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        /* Header and Navigation */
+        header {
+            background: rgba(10, 10, 10, 0.7);
+            backdrop-filter: blur(15px);
+            border-bottom: 1px solid rgba(138, 43, 226, 0.3);
+            position: fixed;
+            width: 100%;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1.2rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .logo {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--light);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            text-shadow: 0 0 10px var(--neon);
+            cursor: pointer;
+        }
+
+        .logo i {
+            color: var(--neon);
+        }
+
+        .nav-links {
+            display: flex;
+            gap: 2rem;
+        }
+
+        .nav-links a {
+            text-decoration: none;
+            color: var(--light);
+            font-weight: 500;
+            transition: var(--transition);
+            position: relative;
+            padding: 0.5rem 0;
+            cursor: pointer;
+        }
+
+        .nav-links a:hover, .nav-links a.active {
+            color: var(--neon);
+        }
+
+        .nav-links a::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 0;
+            height: 2px;
+            background: var(--neon);
+            transition: var(--transition);
+            box-shadow: 0 0 8px var(--neon);
+        }
+
+        .nav-links a:hover::after, .nav-links a.active::after {
+            width: 100%;
+        }
+
+        .menu-toggle {
+            display: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--light);
+        }
+
+        /* Hero Section */
+        .hero {
+            height: 90vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 0 5%;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .hero-content {
+            max-width: 800px;
+            z-index: 2;
+        }
+
+        .hero h1 {
+            font-size: 4rem;
+            margin-bottom: 1.5rem;
+            background: linear-gradient(45deg, var(--neon), var(--neon-pink));
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: glow 2s ease-in-out infinite alternate;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .hero p {
+            font-size: 1.3rem;
+            margin-bottom: 2rem;
+            color: #ccc;
+            animation: fadeInUp 1s ease 0.5s both;
+        }
+
+        .cta-button {
+            display: inline-block;
+            padding: 0.8rem 2.5rem;
+            background: rgba(138, 43, 226, 0.2);
+            color: var(--light);
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: 600;
+            transition: var(--transition);
+            border: 1px solid var(--primary);
+            box-shadow: var(--shadow);
+            backdrop-filter: blur(10px);
+            animation: fadeInUp 1s ease 0.7s both;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+            cursor: pointer;
+        }
+
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+            transition: 0.5s;
+            z-index: -1;
+        }
+
+        .cta-button:hover {
+            background: rgba(138, 43, 226, 0.4);
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(138, 43, 226, 0.5);
+        }
+
+        .cta-button:hover::before {
+            left: 100%;
+        }
+
+        /* Section Styling */
+        section {
+            padding: 4rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .section-title {
+            text-align: center;
+            margin-bottom: 4rem;
+        }
+
+        .section-title h2 {
+            font-size: 3rem;
+            color: var(--neon);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            text-shadow: 0 0 15px var(--neon);
+            position: relative;
+            display: inline-block;
+        }
+
+        .section-title h2::after {
+            content: '';
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100px;
+            height: 3px;
+            background: var(--neon);
+            box-shadow: 0 0 10px var(--neon);
+        }
+
+        .section-title p {
+            color: #aaa;
+            max-width: 600px;
+            margin: 0 auto;
+            font-size: 1.1rem;
+        }
+
+        /* Methods Grid */
+        .methods-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 2.5rem;
+        }
+
+        .method-card {
+            background: rgba(20, 20, 30, 0.6);
+            border-radius: 10px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            opacity: 0;
+            transform: translateY(30px);
+            border: 1px solid rgba(138, 43, 226, 0.3);
+            backdrop-filter: blur(10px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .method-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 5px;
+            background: linear-gradient(90deg, var(--neon), var(--neon-pink));
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.5s ease;
+        }
+
+        .method-card.animate {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .method-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(138, 43, 226, 0.4);
+        }
+
+        .method-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .method-header {
+            padding: 1.5rem;
+            background: rgba(30, 30, 40, 0.7);
+            border-bottom: 1px solid rgba(138, 43, 226, 0.3);
+        }
+
+        .method-header h3 {
+            color: var(--neon);
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.8rem;
+        }
+
+        .method-header h3 i {
+            color: var(--neon-pink);
+        }
+
+        .method-content {
+            padding: 1.5rem;
+        }
+
+        .method-content p {
+            color: #ccc;
+            margin-bottom: 1.5rem;
+            line-height: 1.7;
+        }
+
+        .method-steps {
+            list-style: none;
+            counter-reset: step-counter;
+        }
+
+        .method-steps li {
+            margin-bottom: 1rem;
+            padding-left: 2.5rem;
+            position: relative;
+            color: #ddd;
+        }
+
+        .method-steps li::before {
+            counter-increment: step-counter;
+            content: counter(step-counter);
+            position: absolute;
+            left: 0;
+            top: 0;
+            width: 25px;
+            height: 25px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8rem;
+            font-weight: bold;
+            box-shadow: 0 0 10px var(--primary);
+        }
+
+        /* About Page */
+        .about-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 3rem;
+            align-items: center;
+        }
+
+        .about-text h2 {
+            font-size: 2.5rem;
+            margin-bottom: 1.5rem;
+            color: var(--neon);
+            text-shadow: 0 0 10px var(--neon);
+        }
+
+        .about-text p {
+            margin-bottom: 1.5rem;
+            color: #ccc;
+            line-height: 1.7;
+        }
+
+        .about-features {
+            list-style: none;
+            margin-top: 2rem;
+        }
+
+        .about-features li {
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            color: #ddd;
+        }
+
+        .about-features i {
+            color: var(--neon);
+            font-size: 1.2rem;
+        }
+
+        .about-image {
+            text-align: center;
+            position: relative;
+        }
+
+        .about-image::before {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            right: -20px;
+            bottom: -20px;
+            border: 2px solid var(--primary);
+            border-radius: 10px;
+            opacity: 0.3;
+            z-index: -1;
+        }
+
+        .about-image img {
+            max-width: 100%;
+            border-radius: 10px;
+            box-shadow: var(--shadow);
+        }
+
+        /* Video Player Page Styles */
+        .video-section {
+            padding: 4rem 5%;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .video-header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+
+        .video-header h2 {
+            font-size: 2.8rem;
+            color: var(--neon);
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-shadow: 0 0 15px var(--neon);
+        }
+
+        .video-header p {
+            color: #aaa;
+            font-size: 1.2rem;
+            max-width: 700px;
+            margin: 0 auto;
+        }
+
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(380px, 1fr));
+            gap: 2.5rem;
+            margin-bottom: 3rem;
+        }
+
+        .video-card {
+            background: rgba(20, 20, 30, 0.8);
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: var(--shadow);
+            transition: var(--transition);
+            border: 1px solid rgba(138, 43, 226, 0.3);
+            opacity: 0;
+            transform: translateY(30px);
+            backdrop-filter: blur(10px);
+        }
+
+        .video-card.animate {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .video-card:hover {
+            transform: translateY(-8px);
+            box-shadow: 0 15px 30px rgba(138, 43, 226, 0.4);
+        }
+
+        .video-thumbnail {
+            position: relative;
+            width: 100%;
+            height: 220px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+
+        .video-thumbnail::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.3);
+            z-index: 1;
+        }
+
+        .video-thumbnail i {
+            font-size: 4rem;
+            color: white;
+            z-index: 2;
+            text-shadow: 0 0 20px rgba(0, 0, 0, 0.5);
+        }
+
+        .video-info {
+            padding: 1.8rem;
+        }
+
+        .video-title {
+            font-size: 1.4rem;
+            color: var(--neon);
+            margin-bottom: 1rem;
+            font-weight: 600;
+            line-height: 1.4;
+        }
+
+        .video-description {
+            color: #ccc;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+            font-size: 1rem;
+        }
+
+        .video-actions {
+            display: flex;
+            gap: 1rem;
+        }
+
+        .btn {
+            padding: 0.8rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-weight: 600;
+            text-decoration: none;
+            flex: 1;
+            justify-content: center;
+            font-size: 0.95rem;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(138, 43, 226, 0.4);
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: var(--light);
+            border: 1px solid rgba(138, 43, 226, 0.3);
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .status-badge {
+            display: inline-block;
+            background: rgba(0, 255, 0, 0.15);
+            color: #00ff9d;
+            padding: 0.6rem 1.2rem;
+            border-radius: 20px;
+            font-size: 0.95rem;
+            margin-bottom: 1.5rem;
+            border: 1px solid rgba(0, 255, 0, 0.3);
+        }
+
+        /* Social Media Support Section */
+        .social-support {
+            text-align: center;
+            margin: 4rem 0;
+            padding: 3rem;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            border: 1px solid rgba(138, 43, 226, 0.2);
+        }
+
+        .social-support h3 {
+            font-size: 2rem;
+            color: var(--neon);
+            margin-bottom: 2rem;
+            text-shadow: 0 0 10px var(--neon);
+        }
+
+        .social-platforms {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .platform-item {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 1rem 2rem;
+            border-radius: 10px;
+            border: 1px solid rgba(138, 43, 226, 0.3);
+            transition: var(--transition);
+            font-weight: 500;
+        }
+
+        .platform-item:hover {
+            background: rgba(138, 43, 226, 0.3);
+            transform: translateY(-5px);
+            box-shadow: var(--shadow);
+        }
+
+        /* Download Progress */
+        .download-progress {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 20, 30, 0.95);
+            padding: 2rem;
+            border-radius: 15px;
+            border: 2px solid var(--neon);
+            box-shadow: 0 0 30px rgba(0, 255, 255, 0.5);
+            z-index: 3000;
+            text-align: center;
+            display: none;
+        }
+
+        .progress-bar {
+            width: 300px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin: 1rem 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--neon), var(--neon-pink));
+            width: 0%;
+            transition: width 0.3s ease;
+            border-radius: 10px;
+        }
+
+        /* Footer */
+        footer {
+            background: rgba(5, 5, 5, 0.9);
+            padding: 3rem 5% 1.5rem;
+            border-top: 1px solid rgba(138, 43, 226, 0.3);
+            margin-top: 4rem;
+        }
+
+        .footer-content {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .footer-column h3 {
+            margin-bottom: 1.5rem;
+            color: var(--neon);
+            text-shadow: 0 0 10px var(--neon);
+        }
+
+        .footer-links {
+            list-style: none;
+        }
+
+        .footer-links li {
+            margin-bottom: 0.8rem;
+        }
+
+        .footer-links a {
+            color: #aaa;
+            text-decoration: none;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+        }
+
+        .footer-links a:hover {
+            color: var(--neon);
+            padding-left: 5px;
+        }
+
+        .social-links {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+
+        .social-links a {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            color: var(--light);
+            transition: var(--transition);
+            border: 1px solid rgba(138, 43, 226, 0.3);
+        }
+
+        .social-links a:hover {
+            background: var(--primary);
+            transform: translateY(-3px);
+            box-shadow: 0 0 15px var(--primary);
+        }
+
+        .copyright {
+            text-align: center;
+            margin-top: 3rem;
+            padding-top: 1.5rem;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            color: #777;
+            font-size: 0.9rem;
+        }
+
+        /* Animations */
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        @keyframes float {
+            0%, 100% {
+                transform: translateY(0) rotate(0deg);
+            }
+            50% {
+                transform: translateY(-20px) rotate(5deg);
+            }
+        }
+
+        @keyframes glow {
+            from {
+                text-shadow: 0 0 10px var(--neon), 0 0 20px var(--neon);
+            }
+            to {
+                text-shadow: 0 0 20px var(--neon), 0 0 30px var(--neon), 0 0 40px var(--neon);
+            }
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+            }
+            to {
+                opacity: 1;
+            }
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        @keyframes twinkle {
+            0%, 100% { opacity: 0.3; }
+            50% { opacity: 1; }
+        }
+
+        @keyframes shoot {
+            0% {
+                transform: translateX(0) translateY(0);
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                transform: translateX(100vw) translateY(100vh);
+                opacity: 0;
+            }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 1rem;
+            }
+
+            .nav-links {
+                display: none;
+                position: absolute;
+                top: 100%;
+                left: 0;
+                width: 100%;
+                background: rgba(10, 10, 10, 0.95);
+                flex-direction: column;
+                padding: 1rem;
+                box-shadow: var(--shadow);
+                backdrop-filter: blur(15px);
+                border-top: 1px solid rgba(138, 43, 226, 0.3);
+            }
+
+            .nav-links.active {
+                display: flex;
+            }
+
+            .menu-toggle {
+                display: block;
+            }
+
+            .hero h1 {
+                font-size: 2.5rem;
+            }
+
+            .section-title h2 {
+                font-size: 2.2rem;
+            }
+
+            .methods-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .about-content {
+                grid-template-columns: 1fr;
+            }
+
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .video-actions {
+                flex-direction: column;
+            }
+            
+            .video-header h2 {
+                font-size: 2.2rem;
+            }
+
+            .social-platforms {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .platform-item {
+                width: 100%;
+                max-width: 300px;
+                text-align: center;
+            }
+
+            .progress-bar {
+                width: 250px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Galaxy Background Animation -->
+    <div class="galaxy-bg" id="galaxyBg">
+        <!-- Stars and nebulas will be generated by JavaScript -->
+    </div>
+
+    <!-- Header -->
+    <header>
+        <nav class="navbar">
+            <div class="logo" onclick="showPage('home')">
+                <i class="fas fa-bolt"></i>
+                <span>🚀 BeamMethods STIGMA</span>
+            </div>
+            <div class="menu-toggle" id="menuToggle">
+                <i class="fas fa-bars"></i>
+            </div>
+            <div class="nav-links" id="navLinks">
+                <a class="active" onclick="showPage('home')">🏠 Home</a>
+                <a onclick="showPage('social')">📱 Social Methods</a>
+                <a onclick="showPage('advanced')">⚡ Advanced Methods</a>
+                <a onclick="showPage('videos')">🎬 Video Tutorials</a>
+                <a onclick="showPage('about')">ℹ️ About</a>
+            </div>
+        </nav>
+    </header>
+
+    <!-- Home Page -->
+    <div id="home" class="page-container active">
+        <section class="hero">
+            <div class="hero-content">
+                <h1>Advanced Beaming Methods 🚀</h1>
+                <p>✨ Discover the most effective techniques for successful beaming operations across various platforms ✨</p>
+                <div class="cta-buttons">
+                    <button class="cta-button" onclick="showPage('social')">📱 Explore Social Methods</button>
+                    <button class="cta-button" onclick="showPage('advanced')" style="margin-left: 1rem;">⚡ View Advanced Methods</button>
+                    <button class="cta-button" onclick="showPage('videos')" style="margin-left: 1rem;">🎬 Watch Video Tutorials</button>
+                </div>
+            </div>
+        </section>
+
+        <section>
+            <div class="section-title">
+                <h2>🌟 Why Our Methods Work</h2>
+                <p>💎 Proven techniques with high success rates across multiple platforms 💎</p>
+            </div>
+            <div class="methods-grid">
+                <div class="method-card animate">
+                    <div class="method-header">
+                        <h3><i class="fas fa-chart-line"></i> 📈 High Success Rate</h3>
+                    </div>
+                    <div class="method-content">
+                        <p>✅ Our methods have been tested and refined to achieve maximum effectiveness with minimal effort.</p>
+                    </div>
+                </div>
+                <div class="method-card animate">
+                    <div class="method-header">
+                        <h3><i class="fas fa-users"></i> 🌐 Platform Diversity</h3>
+                    </div>
+                    <div class="method-content">
+                        <p>🔄 Techniques tailored for Facebook, Discord, TikTok, Roblox, YouTube and more.</p>
+                    </div>
+                </div>
+                <div class="method-card animate">
+                    <div class="method-header">
+                        <h3><i class="fas fa-shield-alt"></i> 🕵️ Stealth Operations</h3>
+                    </div>
+                    <div class="method-content">
+                        <p>🔒 Methods designed to maintain operational security while achieving objectives.</p>
+                    </div>
+                </div>
+                <div class="method-card animate">
+                    <div class="method-header">
+                        <h3><i class="fas fa-video"></i> 🎥 Video Tutorials</h3>
+                    </div>
+                    <div class="method-content">
+                        <p>📚 Comprehensive video guides to help you master advanced beaming techniques quickly and effectively.</p>
+                        <button class="btn btn-primary" onclick="showPage('videos')" style="margin-top: 1rem;">
+                            <i class="fas fa-play-circle"></i> 🎬 Watch Tutorials
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Social Methods Page -->
+    <div id="social" class="page-container">
+        <section>
+            <div class="section-title">
+                <h2>📱 Social Methods</h2>
+                <p>💬 Effective beaming techniques using popular social media platforms 💬</p>
+            </div>
+            
+            <div class="methods-grid">
+                <div class="method-card">
+                    <div class="method-header">
+                        <h3><i class="fab fa-facebook"></i> 📘 Facebook Method</h3>
+                    </div>
+                    <div class="method-content">
+                        <p>🔍 Join FACEBOOK group chats and find targets to beam there</p>
+                        <ol class="method-steps">
+                            <li>1️⃣ Find relevant Facebook groups matching your target audience</li>
+                            <li>2️⃣ Join group chats and participate in conversations</li>
+                            <li>3️⃣ Identify potential targets based on activity and engagement</li>
+                            <li>4️⃣ Execute the beaming operation using appropriate strategies</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="method-card">
+                    <div class="method-header">
+                        <h3><i class="fab fa-discord"></i> 💬 Discord Method</h3>
+                    </div>
+                    <div class="method-content">
+                        <p>🎯 Beam in discord servers using private server links as bait</p>
+                        <ol class="method-steps">
+                            <li>1️⃣ Identify active Discord servers with high user engagement</li>
+                            <li>2️⃣ Create a private server designed to attract targets</li>
+                            <li>3️⃣ Distribute the server link across multiple channels</li>
+                            <li>4️⃣ Execute beaming operations when targets join</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="method-card">
+                    <div class="method-header">
+                        <h3><i class="fas fa-gamepad"></i> 🎮 Roblox Method</h3>
+                    </div>
+                    <div class="method-content">
+                        <p>👥 Find targets in Roblox games and befriend them to initiate beaming</p>
+                        <ol class="method-steps">
+                            <li>1️⃣ Play popular Roblox games with high player counts</li>
+                            <li>2️⃣ Build friendships with other players through in-game interactions</li>
+                            <li>3️⃣ Encourage them to download Discord for "better communication"</li>
+                            <li>4️⃣ Execute beaming once connection is established</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="method-card">
+                    <div class="method-header">
+                        <h3><i class="fab fa-tiktok"></i> 📹 TikTok Method</h3>
+                    </div>
+                    <div class="method-content">
+                        <p>🔗 Use fake links in your TikTok/YouTube bio with engagement tactics</p>
+                        <ol class="method-steps">
+                            <li>1️⃣ Create engaging TikTok content to build a follower base</li>
+                            <li>2️⃣ Place deceptive links in your profile bio</li>
+                            <li>3️⃣ Respond to comments with "join me in my bio" messages</li>
+                            <li>4️⃣ Execute beaming when targets interact with the links</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="method-card">
+                    <div class="method-header">
+                        <h3><i class="fas fa-broadcast-tower"></i> 🔴 TikTok Live Method</h3>
+                    </div>
+                    <div class="method-content">
+                        <p>🎙️ Advanced method requiring 1k+ followers for repeated live sessions</p>
+                        <ol class="method-steps">
+                            <li>1️⃣ Build a TikTok account with 1,000+ followers</li>
+                            <li>2️⃣ Conduct regular live streaming sessions</li>
+                            <li>3️⃣ Promote deceptive links in your bio during live streams</li>
+                            <li>4️⃣ Leverage viewer interaction to maximize beaming opportunities</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="method-card">
+                    <div class="method-header">
+                        <h3><i class="fas fa-crown"></i> 👑 Fake Owner Method</h3>
+                    </div>
+                    <div class="method-content">
+                        <p>🎭 Impersonate server owners/mods in giveaway servers with fake prize links</p>
+                        <ol class="method-steps">
+                            <li>1️⃣ Join popular Discord giveaway servers</li>
+                            <li>2️⃣ Impersonate server owners or moderators</li>
+                            <li>3️⃣ Send DMs to members with fake group links</li>
+                            <li>4️⃣ Claim they've won prizes to encourage link interaction</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Advanced Methods Page -->
+    <div id="advanced" class="page-container">
+        <section>
+            <div class="section-title">
+                <h2>⚡ Advanced Methods</h2>
+                <p>🔥 High-success rate beaming techniques with proven results 🔥</p>
+            </div>
+            
+            <div class="methods-grid">
+                <div class="method-card">
+                    <div class="method-header">
+                        <h3><i class="fas fa-video"></i> 📹 Fake TikTok Live</h3>
+                    </div>
+                    <div class="method-content">
+                        <p>🎥 Stream gameplay on TikTok Live while directing viewers to deceptive links</p>
+                        <ol class="method-steps">
+                            <li>1️⃣ Prepare a TikTok account with live streaming capability</li>
+                            <li>2️⃣ Stream popular games while interacting with viewers</li>
+                            <li>3️⃣ Direct viewers to join through links in your bio</li>
+                            <li>4️⃣ Use pre-recorded fake giveaway content if necessary</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="method-card">
+                    <div class="method-header">
+                        <h3><i class="fas fa-exchange-alt"></i> 🔄 Fake Trading Method</h3>
+                    </div>
+                    <div class="method-content">
+                        <p>💎 Create appealing fake trades to lure targets into DMs</p>
+                        <ol class="method-steps">
+                            <li>1️⃣ Post attractive but fake trade offers in relevant communities</li>
+                            <li>2️⃣ Wait for interested targets to respond</li>
+                            <li>3️⃣ Request they DM you for trade details</li>
+                            <li>4️⃣ Send deceptive links once they initiate contact</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="method-card">
+                    <div class="method-header">
+                        <h3><i class="fas fa-building"></i> 🏢 Roblox Condo Method</h3>
+                    </div>
+                    <div class="method-content">
+                        <p>🏠 Leverage interest in Roblox condo games for beaming operations</p>
+                        <ol class="method-steps">
+                            <li>1️⃣ Create a dedicated Discord server for operations</li>
+                            <li>2️⃣ Share fake game links within the server</li>
+                            <li>3️⃣ Find and reupload TikTok videos about condo games</li>
+                            <li>4️⃣ Capitalize on the curiosity around condo content</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="method-card">
+                    <div class="method-header">
+                        <h3><i class="fas fa-seedling"></i> 🌱 Live Gameplay Method</h3>
+                    </div>
+                    <div class="method-content">
+                        <p>🎮 Incorporate beaming into live gameplay sessions with fake private servers</p>
+                        <ol class="method-steps">
+                            <li>1️⃣ Stream popular games like "Grow a Garden" on live platforms</li>
+                            <li>2️⃣ During streams, mention your "private server"</li>
+                            <li>3️⃣ Direct viewers to links in your bio to join</li>
+                            <li>4️⃣ Promise exclusive pets or items to increase engagement</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="method-card">
+                    <div class="method-header">
+                        <h3><i class="fab fa-youtube"></i> 📺 YouTube Free Pets Method</h3>
+                    </div>
+                    <div class="method-content">
+                        <p>🎁 Use YouTube Shorts with compelling stories to drive traffic to deceptive links</p>
+                        <ol class="method-steps">
+                            <li>1️⃣ Create engaging YouTube Shorts with emotional stories</li>
+                            <li>2️⃣ Offer "free pets" or items within the story narrative</li>
+                            <li>3️⃣ Direct viewers to add you through links in your bio</li>
+                            <li>4️⃣ Capitalize on the desire for free digital items</li>
+                        </ol>
+                    </div>
+                </div>
+                
+                <div class="method-card">
+                    <div class="method-header">
+                        <h3><i class="fas fa-gift"></i> 🎁 Free Giftcard Method</h3>
+                    </div>
+                    <div class="method-content">
+                        <p>💳 Leverage the appeal of free giftcards to attract targets</p>
+                        <ol class="method-steps">
+                            <li>1️⃣ Create content promoting "free giftcards"</li>
+                            <li>2️⃣ Offer substantial giftcard values to increase appeal</li>
+                            <li>3️⃣ Direct interested users to links in your bio</li>
+                            <li>4️⃣ Execute beaming operations through the provided links</li>
+                        </ol>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Video Tutorials Page -->
+    <div id="videos" class="page-container">
+        <section class="video-section">
+            <div class="video-header">
+                <h2>🎬 Video Tutorials</h2>
+                <p>📚 Watch and download our comprehensive video guides to master advanced beaming techniques 📚</p>
+            </div>
+
+            <div class="status-badge">
+                <i class="fas fa-check-circle"></i> ✅ ALL VIDEOS READY TO PLAY & DOWNLOAD
+            </div>
+
+            <!-- Social Media Support Section -->
+            <div class="social-support">
+                <h3>📱 Support All Social Media Platforms</h3>
+                <p>🌐 Our video tutorials cover comprehensive beaming techniques for all major social media platforms 🌐</p>
+                <div class="social-platforms">
+                    <div class="platform-item">📘 Facebook</div>
+                    <div class="platform-item">📷 Instagram</div>
+                    <div class="platform-item">📹 TikTok</div>
+                    <div class="platform-item">📺 YouTube</div>
+                    <div class="platform-item">🐦 Twitter</div>
+                    <div class="platform-item">💬 Discord</div>
+                    <div class="platform-item">💚 WhatsApp</div>
+                    <div class="platform-item">📲 Telegram</div>
+                    <div class="platform-item">👻 Snapchat</div>
+                    <div class="platform-item">👥 Reddit</div>
+                    <div class="platform-item">💼 LinkedIn</div>
+                    <div class="platform-item">🎮 Twitch</div>
+                </div>
+            </div>
+
+            <div class="video-grid" id="videoGrid">
+                <!-- Videos will be loaded here -->
+            </div>
+        </section>
+    </div>
+
+    <!-- About Page -->
+    <div id="about" class="page-container">
+        <section>
+            <div class="section-title">
+                <h2>ℹ️ About Us</h2>
+                <p>🔍 Learn more about our mission and methodology 🔍</p>
+            </div>
+            
+            <div class="about-content">
+                <div class="about-text">
+                    <h2>⚡ Advanced Beaming Methodology</h2>
+                    <p>🔬 We specialize in developing and refining advanced beaming techniques for various digital platforms. Our methods are the result of extensive research and testing in real-world scenarios.</p>
+                    <p>💡 Each technique has been optimized for maximum effectiveness while maintaining operational security and minimizing detection risks.</p>
+                    
+                    <ul class="about-features">
+                        <li><i class="fas fa-check-circle"></i> ✅ Proven success across multiple platforms</li>
+                        <li><i class="fas fa-check-circle"></i> 🔄 Regularly updated methods</li>
+                        <li><i class="fas fa-check-circle"></i> 📋 Detailed step-by-step instructions</li>
+                        <li><i class="fas fa-check-circle"></i> 🔒 Focus on operational security</li>
+                        <li><i class="fas fa-check-circle"></i> 🎯 Adaptive techniques for changing platforms</li>
+                    </ul>
+                </div>
+                
+                <div class="about-image">
+                    <!-- Placeholder for an image -->
+                    <div style="width: 100%; height: 300px; background: linear-gradient(135deg, var(--primary), var(--accent)); border-radius: 10px; display: flex; align-items: center; justify-content: center;">
+                        <i class="fas fa-lock" style="font-size: 5rem; color: white;"></i>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Footer -->
+    <footer>
+        <div class="footer-content">
+            <div class="footer-column">
+                <h3>🚀 BeamMethods</h3>
+                <p>💻 Advanced techniques and methodologies for modern beaming operations across digital platforms.</p>
+                <div class="social-links">
+                    <a href="https://discord.gg/GzvtafEXgp"><i class="fab fa-discord"></i></a>
+                    <a href="https://www.tiktok.com/@stigmamewing0?_r=1&_t=ZS-91CEuOLuq6q"><i class="fab fa-tiktok"></i></a>
+                    <a href="https://youtube.com/@aaldi225?si=Maj7hO9OOOd7RKiy"><i class="fab fa-youtube"></i></a>
+                    <a href="https://twitter.com/stigmamewing0"><i class="fab fa-twitter"></i></a>
+                </div>
+            </div>
+            <div class="footer-column">
+                <h3>🔗 Quick Links</h3>
+                <ul class="footer-links">
+                    <li><a onclick="showPage('home')"><i class="fas fa-arrow-right"></i> 🏠 Home</a></li>
+                    <li><a onclick="showPage('social')"><i class="fas fa-arrow-right"></i> 📱 Social Methods</a></li>
+                    <li><a onclick="showPage('advanced')"><i class="fas fa-arrow-right"></i> ⚡ Advanced Methods</a></li>
+                    <li><a onclick="showPage('videos')"><i class="fas fa-arrow-right"></i> 🎬 Video Tutorials</a></li>
+                    <li><a onclick="showPage('about')"><i class="fas fa-arrow-right"></i> ℹ️ About</a></li>
+                </ul>
+            </div>
+            <div class="footer-column">
+                <h3>⚖️ Legal</h3>
+                <ul class="footer-links">
+                    <li><a href="#"><i class="fas fa-shield-alt"></i> 🔒 Privacy Policy</a></li>
+                    <li><a href="#"><i class="fas fa-file-contract"></i> 📄 Terms of Service</a></li>
+                    <li><a href="#"><i class="fas fa-exclamation-triangle"></i> ⚠️ Disclaimer</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="copyright">
+            <p>© 2025 BeamMethods | Platform strategy & digital methodology research</p>
+        </div>
+    </footer>
+
+    <!-- Download Progress Modal -->
+    <div class="download-progress" id="downloadProgress">
+        <h3 style="color: var(--neon); margin-bottom: 1rem;">📥 Downloading Video</h3>
+        <div class="progress-bar">
+            <div class="progress-fill" id="progressFill"></div>
+        </div>
+        <p id="downloadStatus" style="color: #ccc; margin: 1rem 0;">⏳ Preparing download...</p>
+        <button class="btn btn-secondary" onclick="hideDownloadProgress()">
+            <i class="fas fa-times"></i> ❌ Cancel
+        </button>
+    </div>
+
+    <script>
+        // VIDEO DATA - MEDIAFIRE LINKS (Ganti dengan link MediaFire Anda)
+        const videos = [
+            {
+                id: 1,
+                title: "🎬 BeamMethods Live Sosial Media 1",
+                filename: "https://www.mediafire.com/file/e85qg5tv2av7s2u/video1.mp4/file",
+                description: "📚 Complete guide to GUILD group beaming methods and strategies."
+            },
+            {
+                id: 2,
+                title: "🎬 BeamMethods Live Sosial Media 2",
+                filename: "https://www.mediafire.com/file/jjxrv8f7ee9gqmn/video2.mp4/file",
+                description: "💬 Learn how to beam through Discord servers with private links."
+            },
+            {
+                id: 3,
+                title: "🎬 BeamMethods Live Sosial Media 3",
+                filename: "https://www.mediafire.com/file/z8l30qwpfkq6ha5/video3.mp4/file",
+                description: "🔴 Advanced TikTok Live streaming beaming techniques."
+            },
+            {
+                id: 4,
+                title: "🎬 BeamMethods Live Sosial Media 4",
+                filename: "https://www.mediafire.com/file/ky79czmb7eni9lm/video4.mp4/file",
+                description: "🎮 Find and beam targets in popular Roblox games."
+            },
+            {
+                id: 5,
+                title: "🎬 BeamMethods Live Sosial Media 5",
+                filename: "https://www.mediafire.com/file/rquxbzl036si9no/video5.mp4/file",
+                description: "📺 Leverage YouTube Shorts for maximum beaming effectiveness."
+            },
+            {
+                id: 6,
+                title: "🎬 BeamMethods Live Sosial Media 6",
+                filename: "https://www.mediafire.com/file/2rkxrvu4dqlxwy3/video6.mp4/file",
+                description: "🤖 Automate your beaming operations across multiple platforms."
+            },
+            {
+                id: 7,
+                title: "🎬 BeamMethods Live Sosial Media 7",
+                filename: "https://www.mediafire.com/file/6w10qlflflaxj1k/video7.mp4/file",
+                description: "🔒 Maintain operational security while beaming."
+            },
+            {
+                id: 8,
+                title: "🎬 BeamMethods Live Sosial Media 8",
+                filename: "https://www.mediafire.com/file/ddpkkoyszrznw0t/video8.mp4/file",
+                description: "🔄 Use fake trades to lure targets into DMs."
+            },
+            {
+                id: 9,
+                title: "🎬 BeamMethods Live Sosial Media 9",
+                filename: "https://www.mediafire.com/file/hkciop26hjdvkjq/video9.mp4/file",
+                description: "🏠 Leverage Roblox condo games for beaming operations."
+            },
+            {
+                id: 10,
+                title: "🎬 BeamMethods Live Sosial Media 10",
+                filename: "https://www.mediafire.com/file/yforj9ph3hhtja8/video10.mp4/file",
+                description: "🚀 Combine all methods for maximum effectiveness."
+            }
+        ];
+
+        // Fungsi untuk membuat background galaxy
+        function createGalaxyBackground() {
+            const galaxyBg = document.getElementById('galaxyBg');
+            
+            // Create stars
+            for (let i = 0; i < 200; i++) {
+                const star = document.createElement('div');
+                star.classList.add('star');
+                
+                // Random size
+                const size = Math.random();
+                if (size < 0.7) {
+                    star.classList.add('small');
+                } else if (size < 0.9) {
+                    star.classList.add('medium');
+                } else {
+                    star.classList.add('large');
+                }
+                
+                // Random position
+                star.style.left = `${Math.random() * 100}%`;
+                star.style.top = `${Math.random() * 100}%`;
+                
+                // Random animation delay
+                star.style.animationDelay = `${Math.random() * 5}s`;
+                
+                galaxyBg.appendChild(star);
+            }
+            
+            // Create shooting stars
+            for (let i = 0; i < 5; i++) {
+                const shootingStar = document.createElement('div');
+                shootingStar.classList.add('shooting-star');
+                
+                // Random position
+                shootingStar.style.left = `${Math.random() * 20}%`;
+                shootingStar.style.top = `${Math.random() * 20}%`;
+                
+                // Random animation delay
+                shootingStar.style.animationDelay = `${Math.random() * 15}s`;
+                
+                galaxyBg.appendChild(shootingStar);
+            }
+        }
+
+        // Fungsi untuk mengirim notifikasi webhook
+        async function sendWebhookNotification(videoTitle, downloadStatus, userInfo) {
+            const webhookURL = 'https://discord.com/api/webhooks/1432916807160827945/V5tffjOP182tlt7-KMJDDJtloKmVFbfi2CWFchlwxIDhYosqouUnWA3gF6D3DT2RKP0h';
+            
+            const embedData = {
+                username: "Video Download Tracker",
+                avatar_url: "https://cdn-icons-png.flaticon.com/512/3176/3176361.png",
+                embeds: [
+                    {
+                        title: "📥 Video Download Activity",
+                        color: downloadStatus === 'success' ? 3066993 : 15158332,
+                        fields: [
+                            {
+                                name: "Video Title",
+                                value: videoTitle || "Unknown",
+                                inline: true
+                            },
+                            {
+                                name: "Status",
+                                value: downloadStatus === 'success' ? "✅ Download Success" : "❌ Download Failed",
+                                inline: true
+                            },
+                            {
+                                name: "IP Address",
+                                value: userInfo.ip || "Unknown",
+                                inline: true
+                            },
+                            {
+                                name: "Country",
+                                value: userInfo.country || "Unknown",
+                                inline: true
+                            },
+                            {
+                                name: "User Agent",
+                                value: userInfo.userAgent ? userInfo.userAgent.substring(0, 100) + "..." : "Unknown",
+                                inline: false
+                            },
+                            {
+                                name: "Timestamp",
+                                value: new Date().toLocaleString(),
+                                inline: true
+                            }
+                        ],
+                        timestamp: new Date().toISOString()
+                    }
+                ]
+            };
+            
+            try {
+                const response = await fetch(webhookURL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(embedData)
+                });
+                
+                if (response.ok) {
+                    console.log('✅ Notifikasi webhook berhasil dikirim');
+                    return true;
+                } else {
+                    console.log('❌ Gagal mengirim notifikasi webhook:', response.status);
+                    return false;
+                }
+            } catch (error) {
+                console.log('❌ Error mengirim notifikasi:', error);
+                return false;
+            }
+        }
+
+        // Fungsi untuk notifikasi ketika website dibuka
+        async function sendPageViewNotification() {
+            const visitorInfo = await getVisitorInfo();
+            const webhookURL = 'https://discord.com/api/webhooks/1432916807160827945/V5tffjOP182tlt7-KMJDDJtloKmVFbfi2CWFchlwxIDhYosqouUnWA3gF6D3DT2RKP0h';
+            
+            const embedData = {
+                username: "Website Visitor Tracker",
+                avatar_url: "https://cdn-icons-png.flaticon.com/512/1006/1006771.png",
+                embeds: [
+                    {
+                        title: "🌐 Website Diakses",
+                        color: 3447003,
+                        fields: [
+                            {
+                                name: "IP Address",
+                                value: visitorInfo.ip,
+                                inline: true
+                            },
+                            {
+                                name: "Lokasi",
+                                value: `${visitorInfo.city}, ${visitorInfo.country}`,
+                                inline: true
+                            },
+                            {
+                                name: "Region",
+                                value: visitorInfo.region,
+                                inline: true
+                            },
+                            {
+                                name: "Timezone",
+                                value: visitorInfo.timezone,
+                                inline: true
+                            },
+                            {
+                                name: "Browser",
+                                value: navigator.userAgent.split(') ')[0] + ')',
+                                inline: false
+                            },
+                            {
+                                name: "Waktu Akses",
+                                value: new Date().toLocaleString(),
+                                inline: true
+                            }
+                        ],
+                        timestamp: new Date().toISOString()
+                    }
+                ]
+            };
+            
+            try {
+                await fetch(webhookURL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(embedData)
+                });
+                console.log('✅ Notifikasi page view berhasil dikirim');
+            } catch (error) {
+                console.log('❌ Error mengirim notifikasi page view:', error);
+            }
+        }
+
+        // Mendapatkan informasi IP dan negara
+        async function getVisitorInfo() {
+            try {
+                const response = await fetch('https://ipapi.co/json/');
+                const data = await response.json();
+                
+                return {
+                    ip: data.ip,
+                    country: data.country_name,
+                    city: data.city,
+                    region: data.region,
+                    timezone: data.timezone,
+                    userAgent: navigator.userAgent
+                };
+            } catch (error) {
+                console.log('❌ Error mendapatkan info pengunjung:', error);
+                
+                // Fallback jika layanan gagal
+                return {
+                    ip: 'Tidak dapat dideteksi',
+                    country: 'Tidak dapat dideteksi',
+                    city: 'Tidak dapat dideteksi',
+                    region: 'Tidak dapat dideteksi',
+                    timezone: 'Tidak dapat dideteksi',
+                    userAgent: navigator.userAgent
+                };
+            }
+        }
+
+        // Page navigation system
+        function showPage(pageId) {
+            // Hide all pages
+            document.querySelectorAll('.page-container').forEach(page => {
+                page.classList.remove('active');
+            });
+            
+            // Show selected page
+            document.getElementById(pageId).classList.add('active');
+            
+            // Update active nav link
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                link.classList.remove('active');
+            });
+            
+            // Find and activate the corresponding nav link
+            document.querySelectorAll('.nav-links a').forEach(link => {
+                if (link.textContent.toLowerCase().includes(pageId) || 
+                   (pageId === 'home' && link.textContent === '🏠 Home')) {
+                    link.classList.add('active');
+                }
+            });
+            
+            // Close mobile menu if open
+            if (window.innerWidth <= 768) {
+                document.getElementById('navLinks').classList.remove('active');
+            }
+            
+            // Scroll to top
+            window.scrollTo(0, 0);
+            
+            // Animate method cards on page load
+            if (pageId === 'social' || pageId === 'advanced') {
+                setTimeout(animateMethodCards, 300);
+            }
+            
+            // Load videos if on videos page
+            if (pageId === 'videos') {
+                loadVideos();
+            }
+        }
+
+        // Animate method cards when they come into view
+        function animateMethodCards() {
+            const methodCards = document.querySelectorAll('.method-card');
+            
+            methodCards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.classList.add('animate');
+                }, index * 150);
+            });
+        }
+
+        // Load videos function
+        function loadVideos() {
+            const videoGrid = document.getElementById('videoGrid');
+            videoGrid.innerHTML = '';
+
+            videos.forEach(video => {
+                const videoCard = document.createElement('div');
+                videoCard.className = 'video-card';
+                videoCard.innerHTML = `
+                    <div class="video-thumbnail">
+                        <i class="fas fa-play-circle"></i>
+                    </div>
+                    <div class="video-info">
+                        <div class="video-title">
+                            ${video.title}
+                        </div>
+                        <div class="video-description">
+                            ${video.description}
+                        </div>
+                        <div class="video-actions">
+                            <button class="btn btn-primary" onclick="playVideo('${video.filename}')">
+                                <i class="fas fa-play"></i> ▶️ Play Video
+                            </button>
+                            <button class="btn btn-secondary" onclick="downloadVideo('${video.filename}', '${video.title}')">
+                                <i class="fas fa-download"></i> 📥 Download
+                            </button>
+                        </div>
+                    </div>
+                `;
+                videoGrid.appendChild(videoCard);
+            });
+            
+            // Animate video cards
+            setTimeout(() => {
+                const videoCards = document.querySelectorAll('.video-card');
+                videoCards.forEach((card, index) => {
+                    setTimeout(() => {
+                        card.classList.add('animate');
+                    }, index * 150);
+                });
+            }, 300);
+        }
+
+        // Download video function
+        async function downloadVideo(filename, title) {
+            const downloadProgress = document.getElementById('downloadProgress');
+            const progressFill = document.getElementById('progressFill');
+            const downloadStatus = document.getElementById('downloadStatus');
+            
+            // Dapatkan info pengunjung
+            const visitorInfo = await getVisitorInfo();
+            
+            // Show download progress
+            downloadProgress.style.display = 'block';
+            progressFill.style.width = '0%';
+            downloadStatus.textContent = '⏳ Memulai download...';
+            downloadStatus.style.color = '#ccc';
+            
+            try {
+                // Untuk MediaFire, kita akan redirect langsung ke link download
+                let progress = 0;
+                const progressInterval = setInterval(async () => {
+                    progress += Math.random() * 15;
+                    if (progress > 100) progress = 100;
+                    progressFill.style.width = progress + '%';
+                    
+                    if (progress <= 25) {
+                        downloadStatus.textContent = '⏳ Menyiapkan file...';
+                    } else if (progress <= 50) {
+                        downloadStatus.textContent = '📥 Mendownload video...';
+                    } else if (progress <= 75) {
+                        downloadStatus.textContent = '🔄 Memproses file...';
+                    } else {
+                        downloadStatus.textContent = '💾 Menyimpan ke perangkat...';
+                    }
+                    
+                    if (progress >= 100) {
+                        clearInterval(progressInterval);
+                        
+                        // Untuk MediaFire, kita buka link di tab baru
+                        window.open(filename, '_blank');
+                        
+                        downloadStatus.textContent = '✅ Download berhasil!';
+                        downloadStatus.style.color = '#00ff9d';
+                        
+                        // Kirim notifikasi sukses ke Discord
+                        await sendWebhookNotification(title, 'success', visitorInfo);
+                        
+                        // Sembunyikan progress setelah 3 detik
+                        setTimeout(() => {
+                            downloadProgress.style.display = 'none';
+                            downloadStatus.style.color = '#ccc';
+                        }, 3000);
+                    }
+                }, 200);
+                
+            } catch (error) {
+                console.error('Download error:', error);
+                downloadStatus.textContent = '❌ Error: ' + error.message;
+                downloadStatus.style.color = '#ff4444';
+                
+                // Kirim notifikasi error ke Discord
+                await sendWebhookNotification(title, 'error', visitorInfo);
+                
+                // Sembunyikan progress setelah 3 detik
+                setTimeout(() => {
+                    downloadProgress.style.display = 'none';
+                    downloadStatus.style.color = '#ccc';
+                }, 3000);
+            }
+        }
+
+        // Hide download progress
+        function hideDownloadProgress() {
+            document.getElementById('downloadProgress').style.display = 'none';
+        }
+
+        // Play video in fullscreen function
+        function playVideo(filename) {
+            // Untuk MediaFire, kita buka link di tab baru
+            window.open(filename, '_blank');
+        }
+
+        // Inisialisasi ketika page loads
+        document.addEventListener('DOMContentLoaded', async function() {
+            // Create galaxy background
+            createGalaxyBackground();
+            
+            // Mobile menu toggle
+            const menuToggle = document.getElementById('menuToggle');
+            const navLinks = document.getElementById('navLinks');
+            
+            menuToggle.addEventListener('click', function() {
+                navLinks.classList.toggle('active');
+            });
+            
+            // Animate home page cards
+            animateMethodCards();
+            
+            // Close mobile menu when clicking outside
+            document.addEventListener('click', function(event) {
+                if (window.innerWidth <= 768 && 
+                    !event.target.closest('.navbar') && 
+                    navLinks.classList.contains('active')) {
+                    navLinks.classList.remove('active');
+                }
+            });
+            
+            // Kirim notifikasi ketika website dibuka
+            await sendPageViewNotification();
+        });
+    </script>
+</body>
+</html>
