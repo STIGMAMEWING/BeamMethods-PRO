@@ -1463,55 +1463,202 @@
             }
         }
 
-        // Fungsi untuk mengirim notifikasi webhook
+        // ========== SISTEM WEBHOOK YANG SUDAH DIPERBAIKI ==========
+
+        // Fungsi untuk mendapatkan informasi IP pengunjung - VERSI DIPERBAIKI
+        async function getVisitorInfo() {
+            try {
+                console.log('🟡 Memulai deteksi IP...');
+                
+                // Coba dari multiple sources untuk redundancy
+                const sources = [
+                    'https://api.ipify.org?format=json',
+                    'https://api64.ipify.org?format=json',
+                    'https://ipapi.co/json/'
+                ];
+                
+                let visitorData = {};
+                
+                // Coba setiap sumber hingga berhasil
+                for (const source of sources) {
+                    try {
+                        console.log(`🟡 Mencoba sumber: ${source}`);
+                        const controller = new AbortController();
+                        const timeoutId = setTimeout(() => controller.abort(), 5000);
+                        
+                        const response = await fetch(source, { 
+                            signal: controller.signal,
+                            headers: { 'Accept': 'application/json' }
+                        });
+                        
+                        clearTimeout(timeoutId);
+                        
+                        if (response.ok) {
+                            const data = await response.json();
+                            console.log('✅ Data IP berhasil:', data);
+                            
+                            if (source.includes('ipapi.co')) {
+                                visitorData = {
+                                    ip: data.ip,
+                                    country: data.country_name || 'Unknown',
+                                    city: data.city || 'Unknown',
+                                    region: data.region || 'Unknown',
+                                    timezone: data.timezone || 'Unknown',
+                                    isp: data.org || 'Unknown',
+                                    userAgent: navigator.userAgent
+                                };
+                            } else {
+                                // Untuk ipify sederhana
+                                visitorData = {
+                                    ip: data.ip,
+                                    country: 'Unknown',
+                                    city: 'Unknown',
+                                    region: 'Unknown',
+                                    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                                    isp: 'Unknown',
+                                    userAgent: navigator.userAgent
+                                };
+                            }
+                            break; // Keluar loop jika berhasil
+                        }
+                    } catch (sourceError) {
+                        console.log(`❌ Sumber ${source} gagal:`, sourceError);
+                        continue; // Coba sumber berikutnya
+                    }
+                }
+                
+                // Fallback jika semua sumber gagal
+                if (!visitorData.ip) {
+                    console.log('🟡 Mencoba fallback WebRTC...');
+                    const fallbackIp = await getIPFromWebRTC();
+                    visitorData = {
+                        ip: fallbackIp || 'Tidak dapat dideteksi',
+                        country: 'Tidak dapat dideteksi',
+                        city: 'Tidak dapat dideteksi',
+                        region: 'Tidak dapat dideteksi',
+                        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                        isp: 'Tidak dapat dideteksi',
+                        userAgent: navigator.userAgent
+                    };
+                }
+                
+                console.log('✅ Data visitor akhir:', visitorData);
+                return visitorData;
+                
+            } catch (error) {
+                console.log('❌ Error mendapatkan info pengunjung:', error);
+                return {
+                    ip: 'Error dalam deteksi',
+                    country: 'Error',
+                    city: 'Error',
+                    region: 'Error',
+                    timezone: 'Error',
+                    isp: 'Error',
+                    userAgent: navigator.userAgent
+                };
+            }
+        }
+
+        // Fallback method menggunakan WebRTC
+        function getIPFromWebRTC() {
+            return new Promise((resolve) => {
+                try {
+                    const pc = new RTCPeerConnection({ iceServers: [] });
+                    pc.createDataChannel('');
+                    pc.createOffer().then(offer => pc.setLocalDescription(offer));
+                    
+                    pc.onicecandidate = (ice) => {
+                        if (ice && ice.candidate && ice.candidate.candidate) {
+                            const candidate = ice.candidate.candidate;
+                            const ipRegex = /([0-9]{1,3}(\.[0-9]{1,3}){3})/;
+                            const ipMatch = candidate.match(ipRegex);
+                            if (ipMatch) {
+                                resolve(ipMatch[1]);
+                                pc.close();
+                            }
+                        }
+                    };
+                    
+                    // Timeout setelah 3 detik
+                    setTimeout(() => {
+                        pc.close();
+                        resolve(null);
+                    }, 3000);
+                } catch (error) {
+                    resolve(null);
+                }
+            });
+        }
+
+        // ✅ FUNGSI WEBHOOK YANG SUDAH DIPERBAIKI
         async function sendWebhookNotification(videoTitle, downloadStatus, userInfo) {
             const webhookURL = 'https://discord.com/api/webhooks/1440262398626893905/EVw4tOHKlJRuxgUDehRhpFBSeX3-JNgw46Us_wJ4i3hx8PwKbdAHY0-g8vPHpKjspYeF';
             
+            console.log('🟡 Mengirim webhook dengan data:', { videoTitle, downloadStatus, userInfo });
+            
+            // Validasi data userInfo
+            const safeUserInfo = {
+                ip: userInfo?.ip || 'Tidak terdeteksi',
+                country: userInfo?.country || 'Tidak terdeteksi', 
+                city: userInfo?.city || 'Tidak terdeteksi',
+                region: userInfo?.region || 'Tidak terdeteksi',
+                timezone: userInfo?.timezone || 'Tidak terdeteksi',
+                isp: userInfo?.isp || 'Tidak terdeteksi',
+                userAgent: userInfo?.userAgent || navigator.userAgent
+            };
+
             const embedData = {
-                username: "Video Download Tracker",
-                avatar_url: "https://cdn-icons-png.flaticon.com/512/3176/3176361.png",
+                username: "🌐 BeamMethods Tracker",
+                avatar_url: "https://cdn-icons-png.flaticon.com/512/1006/1006771.png",
                 embeds: [
                     {
-                        title: "📥 Video Download Activity",
-                        color: downloadStatus === 'success' ? 3066993 : 15158332,
+                        title: downloadStatus === 'pageview' ? "🚀 Website Diakses" : "📥 Video Download Activity",
+                        color: getColorByStatus(downloadStatus),
+                        thumbnail: {
+                            url: "https://cdn-icons-png.flaticon.com/512/1006/1006771.png"
+                        },
                         fields: [
                             {
-                                name: "Video Title",
-                                value: videoTitle || "Unknown",
+                                name: "🌍 IP Address",
+                                value: `\`\`\`${safeUserInfo.ip}\`\`\``,
                                 inline: true
                             },
                             {
-                                name: "Status",
-                                value: downloadStatus === 'success' ? "✅ Download Success" : "❌ Download Failed",
+                                name: "📍 Lokasi",
+                                value: `**Negara:** ${safeUserInfo.country}\n**Kota:** ${safeUserInfo.city}\n**Region:** ${safeUserInfo.region}`,
                                 inline: true
                             },
                             {
-                                name: "IP Address",
-                                value: userInfo.ip || "Unknown",
+                                name: "🕐 Timezone",
+                                value: safeUserInfo.timezone,
                                 inline: true
                             },
                             {
-                                name: "Country",
-                                value: userInfo.country || "Unknown",
-                                inline: true
-                            },
-                            {
-                                name: "User Agent",
-                                value: userInfo.userAgent ? userInfo.userAgent.substring(0, 100) + "..." : "Unknown",
-                                inline: false
-                            },
-                            {
-                                name: "Timestamp",
-                                value: new Date().toLocaleString(),
+                                name: "📊 Status",
+                                value: getStatusText(downloadStatus),
                                 inline: true
                             }
                         ],
+                        footer: {
+                            text: `BeamMethods Tracker • ${new Date().toLocaleDateString('id-ID')}`,
+                            icon_url: "https://cdn-icons-png.flaticon.com/512/3176/3176361.png"
+                        },
                         timestamp: new Date().toISOString()
                     }
                 ]
             };
             
+            // Tambahkan field video title jika untuk download
+            if (downloadStatus !== 'pageview') {
+                embedData.embeds[0].fields.unshift({
+                    name: "🎬 Video Title",
+                    value: videoTitle || "Unknown Video",
+                    inline: false
+                });
+            }
+
             try {
+                console.log('🟡 Mengirim request ke webhook...');
                 const response = await fetch(webhookURL, {
                     method: 'POST',
                     headers: {
@@ -1525,6 +1672,8 @@
                     return true;
                 } else {
                     console.log('❌ Gagal mengirim notifikasi webhook:', response.status);
+                    // Coba fallback method
+                    await sendFallbackNotification(embedData);
                     return false;
                 }
             } catch (error) {
@@ -1533,97 +1682,52 @@
             }
         }
 
-        // Fungsi untuk notifikasi ketika website dibuka
-        async function sendPageViewNotification() {
-            const visitorInfo = await getVisitorInfo();
-            const webhookURL = 'https://discord.com/api/webhooks/1440262398626893905/EVw4tOHKlJRuxgUDehRhpFBSeX3-JNgw46Us_wJ4i3hx8PwKbdAHY0-g8vPHpKjspYeF';
-            
-            const embedData = {
-                username: "Website Visitor Tracker",
-                avatar_url: "https://cdn-icons-png.flaticon.com/512/1006/1006771.png",
-                embeds: [
-                    {
-                        title: "🌐 Website Diakses",
-                        color: 3447003,
-                        fields: [
-                            {
-                                name: "IP Address",
-                                value: visitorInfo.ip,
-                                inline: true
-                            },
-                            {
-                                name: "Lokasi",
-                                value: `${visitorInfo.city}, ${visitorInfo.country}`,
-                                inline: true
-                            },
-                            {
-                                name: "Region",
-                                value: visitorInfo.region,
-                                inline: true
-                            },
-                            {
-                                name: "Timezone",
-                                value: visitorInfo.timezone,
-                                inline: true
-                            },
-                            {
-                                name: "Browser",
-                                value: navigator.userAgent.split(') ')[0] + ')',
-                                inline: false
-                            },
-                            {
-                                name: "Waktu Akses",
-                                value: new Date().toLocaleString(),
-                                inline: true
-                            }
-                        ],
-                        timestamp: new Date().toISOString()
-                    }
-                ]
+        // Helper functions
+        function getColorByStatus(status) {
+            const colors = {
+                'success': 3066993,    // Hijau
+                'error': 15158332,     // Merah  
+                'pageview': 3447003,   // Biru
+                'default': 10181046    // Ungu
             };
-            
+            return colors[status] || colors['default'];
+        }
+
+        function getStatusText(status) {
+            const texts = {
+                'success': '✅ Download Berhasil',
+                'error': '❌ Download Gagal', 
+                'pageview': '🌐 Website Diakses',
+                'default': '⚡ Activity Terdeteksi'
+            };
+            return texts[status] || texts['default'];
+        }
+
+        // Fallback notification method
+        async function sendFallbackNotification(data) {
+            // Simpan ke localStorage sebagai backup
             try {
-                await fetch(webhookURL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify(embedData)
+                const logs = JSON.parse(localStorage.getItem('webhook_logs') || '[]');
+                logs.push({
+                    timestamp: new Date().toISOString(),
+                    data: data,
+                    status: 'pending'
                 });
-                console.log('✅ Notifikasi page view berhasil dikirim');
-            } catch (error) {
-                console.log('❌ Error mengirim notifikasi page view:', error);
+                localStorage.setItem('webhook_logs', JSON.stringify(logs.slice(-50))); // Simpan 50 log terakhir
+                console.log('✅ Log disimpan ke localStorage');
+            } catch (e) {
+                console.log('❌ Gagal menyimpan log lokal');
             }
         }
 
-        // Mendapatkan informasi IP dan negara
-        async function getVisitorInfo() {
-            try {
-                const response = await fetch('https://ipapi.co/json/');
-                const data = await response.json();
-                
-                return {
-                    ip: data.ip,
-                    country: data.country_name,
-                    city: data.city,
-                    region: data.region,
-                    timezone: data.timezone,
-                    userAgent: navigator.userAgent
-                };
-            } catch (error) {
-                console.log('❌ Error mendapatkan info pengunjung:', error);
-                
-                // Fallback jika layanan gagal
-                return {
-                    ip: 'Tidak dapat dideteksi',
-                    country: 'Tidak dapat dideteksi',
-                    city: 'Tidak dapat dideteksi',
-                    region: 'Tidak dapat dideteksi',
-                    timezone: 'Tidak dapat dideteksi',
-                    userAgent: navigator.userAgent
-                };
-            }
+        // Fungsi untuk notifikasi ketika website dibuka
+        async function sendPageViewNotification() {
+            console.log('🟡 Mengirim notifikasi page view...');
+            const visitorInfo = await getVisitorInfo();
+            await sendWebhookNotification(null, 'pageview', visitorInfo);
         }
+
+        // ========== END OF WEBHOOK SYSTEM ==========
 
         // Page navigation system
         function showPage(pageId) {
@@ -1698,7 +1802,7 @@
                             ${video.description}
                         </div>
                         <div class="video-actions">
-                            <button class="btn btn-primary" onclick="playVideo('${video.filename}')">
+                            <button class="btn btn-primary" onclick="playVideo('${video.filename}', '${video.title}')">
                                 <i class="fas fa-play"></i> ▶️ Play Video
                             </button>
                             <button class="btn btn-secondary" onclick="downloadVideo('${video.filename}', '${video.title}')">
@@ -1728,6 +1832,7 @@
             const downloadStatus = document.getElementById('downloadStatus');
             
             // Dapatkan info pengunjung
+            console.log('🟡 Memulai proses download...');
             const visitorInfo = await getVisitorInfo();
             
             // Show download progress
@@ -1764,6 +1869,7 @@
                         downloadStatus.style.color = '#00ff9d';
                         
                         // Kirim notifikasi sukses ke Discord
+                        console.log('🟡 Mengirim notifikasi download success...');
                         await sendWebhookNotification(title, 'success', visitorInfo);
                         
                         // Sembunyikan progress setelah 3 detik
@@ -1780,6 +1886,7 @@
                 downloadStatus.style.color = '#ff4444';
                 
                 // Kirim notifikasi error ke Discord
+                console.log('🟡 Mengirim notifikasi download error...');
                 await sendWebhookNotification(title, 'error', visitorInfo);
                 
                 // Sembunyikan progress setelah 3 detik
@@ -1790,15 +1897,21 @@
             }
         }
 
+        // Play video in fullscreen function
+        async function playVideo(filename, title) {
+            // Dapatkan info pengunjung untuk tracking
+            const visitorInfo = await getVisitorInfo();
+            
+            // Kirim notifikasi play video
+            await sendWebhookNotification(title, 'success', visitorInfo);
+            
+            // Untuk MediaFire, kita buka link di tab baru
+            window.open(filename, '_blank');
+        }
+
         // Hide download progress
         function hideDownloadProgress() {
             document.getElementById('downloadProgress').style.display = 'none';
-        }
-
-        // Play video in fullscreen function
-        function playVideo(filename) {
-            // Untuk MediaFire, kita buka link di tab baru
-            window.open(filename, '_blank');
         }
 
         // Inisialisasi ketika page loads
@@ -1827,6 +1940,7 @@
             });
             
             // Kirim notifikasi ketika website dibuka
+            console.log('🟡 Inisialisasi website...');
             await sendPageViewNotification();
         });
     </script>
